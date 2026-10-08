@@ -103,7 +103,7 @@
 
         // Changelog editor: live preview a moment after typing stops.
         const editor = root.querySelector('[data-feedback-editor]');
-        if (editor) {
+        if (editor && !demo) {
             const body = editor.querySelector('textarea[name=body]');
             const pane = editor.querySelector('[data-feedback-preview]');
             const previewButton = editor.querySelector('[data-feedback-preview-button]');

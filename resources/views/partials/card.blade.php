@@ -1,12 +1,4 @@
-<li class="fb-card {{ $feature->isPinned() ? 'is-pinned' : '' }}"
-    data-feedback-card
-    data-status="{{ $feature->status }}"
-    data-category="{{ $feature->category?->slug }}"
-    data-tags="{{ $feature->tags->pluck('slug')->implode(' ') }}"
-    data-votes="{{ $feature->votes_count }}"
-    data-created="{{ $feature->created_at->getTimestamp() }}"
-    data-pinned="{{ $feature->isPinned() ? 1 : 0 }}"
-    data-search="{{ mb_strtolower($feature->title.' '.$feature->body) }}">
+<li class="fb-card {{ $feature->isPinned() ? 'is-pinned' : '' }}" data-feedback-card data-id="{{ $feature->id }}" data-status="{{ $feature->status }}">
     @include('feedback::partials.vote', ['feature' => $feature, 'voted' => $feature->hasVoter(auth()->user() instanceof \Illuminate\Database\Eloquent\Model ? auth()->user() : null)])
     <div class="fb-card-body">
         <h2 class="fb-card-title"><a href="{{ $feature->url() }}">{{ $feature->title }}</a></h2>

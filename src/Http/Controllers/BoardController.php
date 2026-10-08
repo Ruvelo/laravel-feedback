@@ -111,7 +111,7 @@ class BoardController extends Controller
         return view('feedback::show', [
             'feature' => $feature,
             'voted' => $feature->hasVoter($viewer),
-            'voters' => $feature->votes()->with('voter')->latest('id')->limit(8)->get(),
+            'voters' => $feature->votes()->with('voter')->latest('id')->limit(7)->get(),
             'comments' => $driver === 'builtin'
                 ? $feature->comments()->whereNull('parent_id')->with(['author', 'replies.author'])->oldest()->orderBy('id')->get()
                 : collect(),

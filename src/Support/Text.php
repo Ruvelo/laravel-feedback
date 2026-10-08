@@ -28,7 +28,14 @@ final class Text
 
     public static function excerpt(?string $markdown, int $length = 180): string
     {
-        return Str::limit(self::plain($markdown), $length, '…', preserveWords: true);
+        $plain = self::plain($markdown);
+
+        if (mb_strlen($plain) <= $length) {
+            return $plain;
+        }
+
+        // Cut on a word, and don't leave "end.…".
+        return rtrim(Str::limit($plain, $length, '', preserveWords: true), " \t.,;:!?-–—").'…';
     }
 
     /**

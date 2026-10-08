@@ -168,7 +168,8 @@ final class Feedback
     }
 
     /**
-     * Delete a request with its votes, comments and history.
+     * Delete a request with its votes, comments, history and the
+     * duplicates merged into it.
      */
     public static function delete(FeatureRequest $request): void
     {
@@ -180,6 +181,15 @@ final class Feedback
                     ->delete();
             }
 
+            // Explicitly, for databases that don't enforce foreign keys.
+            Vote::query()->where('request_id', $request->id)->delete();
+            Comment::query()->where('request_id', $request->id)->delete();
+            StatusChange::query()->where('request_id', $request->id)->delete();
+            $request->tags()->detach();
+            // Duplicates merged into it go too: their votes already moved here.
+            foreach (FeatureRequest::query()->where('merged_into_id', $request->id)->get() as $duplicate) {
+                self::delete($duplicate);
+            }
             $request->delete();
         });
 
@@ -453,6 +463,7 @@ final class Feedback
     public static function deleteComment(Comment $comment): void
     {
         DB::transaction(function () use ($comment): void {
+            Comment::query()->where('parent_id', $comment->id)->delete();
             $comment->delete();
             self::recount($comment->request);
         });
@@ -679,6 +690,7 @@ final class Feedback
 
     public static function deleteEntry(Entry $entry): void
     {
+        FeatureRequest::query()->where('entry_id', $entry->id)->update(['entry_id' => null]);
         $entry->delete();
         event(new EntryDeleted($entry));
     }
@@ -730,13 +742,14 @@ final class Feedback
             ->limit(50)
             ->get();
 
-        // Most words in common first; votes break ties.
+        // The most specific words in common first (longer words count for
+        // more); votes break ties.
         return $candidates
             ->sortByDesc(function (FeatureRequest $request) use ($words): int {
                 $title = mb_strtolower($request->title);
                 $score = 0;
                 foreach ($words as $word) {
-                    $score += str_contains($title, $word) ? 1 : 0;
+                    $score += str_contains($title, $word) ? mb_strlen($word) : 0;
                 }
 
                 return $score * 100000 + $request->votes_count;

@@ -9,7 +9,7 @@
 @section('feedback')
     @php
         $viewer = auth()->user() instanceof \Illuminate\Database\Eloquent\Model ? auth()->user() : null;
-        $latest = $feature->statusChanges->last();
+        $latest = $feature->statusChanges->filter(fn ($change) => $change->note !== null)->last();
         $entry = $feature->entry !== null && ($feature->entry->isPublished() || $manager) ? $feature->entry : null;
     @endphp
 
@@ -66,8 +66,12 @@
                     <div class="fb-update-head">
                         @include('feedback::partials.avatar', ['name' => $latest->changerName(), 'class' => 'fb-avatar--small'])
                         <strong>{{ $latest->changerName() }}</strong>
-                        <span>marked this</span>
-                        @include('feedback::partials.status', ['status' => $latest->to])
+                        @if ($latest->from === $latest->to)
+                            <span>posted an update</span>
+                        @else
+                            <span>marked this</span>
+                            @include('feedback::partials.status', ['status' => $latest->to])
+                        @endif
                         <time class="fb-muted" datetime="{{ $latest->created_at?->toIso8601String() }}">{{ $latest->created_at?->diffForHumans() }}</time>
                     </div>
                     <div class="fb-prose">{!! $latest->noteHtml() !!}</div>
