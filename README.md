@@ -304,6 +304,8 @@ All extend `FeedbackException` and render themselves as the right response when 
 
 `Ruvelo\Feedback\Notifications\RequestStatusChanged` is a regular notification. `toArray()` returns `title` ("Shipped: Usage-based billing"), `body`, `url` (the changelog entry for shipped requests), `request_id` and `status`; `toMail()` is there for the `mail` channel. Nobody hears about their own change.
 
+It's queued (`ShouldQueue`) and dispatched after the database transaction commits, so shipping a request with hundreds of voters never sends mail inside the web request. Run a queue worker in production; on the `sync` queue it sends right away.
+
 ### In your tests
 
 ```php

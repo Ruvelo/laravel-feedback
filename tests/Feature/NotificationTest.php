@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Ruvelo\Feedback\Tests\Feature;
 
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Ruvelo\Feedback\Feedback;
 use Ruvelo\Feedback\Notifications\RequestStatusChanged;
@@ -47,6 +50,30 @@ class NotificationTest extends TestCase
         $this->assertSame($request->url(), $stored->data['url']);
         $this->assertSame('planned', $stored->data['status']);
         $this->assertSame('Starting in March. You asked for this.', $ada->notifications()->sole()->data['body']);
+    }
+
+    public function test_it_is_queued_after_commit_and_survives_serialization(): void
+    {
+        $request = Feedback::post($this->user(), 'Dark mode');
+        $notification = new RequestStatusChanged($request, 'under_review', 'planned', 'Soon.');
+
+        $this->assertInstanceOf(ShouldQueue::class, $notification);
+        $this->assertTrue($notification->afterCommit);
+
+        $copy = unserialize(serialize($notification));
+        $this->assertTrue($copy->request->is($request));
+        $this->assertSame(['under_review', 'planned', 'Soon.'], [$copy->from, $copy->to, $copy->note]);
+    }
+
+    public function test_a_status_change_queues_mail_instead_of_sending_it_inline(): void
+    {
+        Queue::fake();
+        $request = Feedback::post($this->user(), 'Dark mode');
+        Feedback::vote($request, $this->user('Tom Reyes'));
+
+        Feedback::changeStatus($request, 'planned');
+
+        Queue::assertPushed(SendQueuedNotifications::class);
     }
 
     public function test_shipping_links_to_the_changelog_entry(): void

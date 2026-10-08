@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Ruvelo\Feedback\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Schema;
 use Ruvelo\Feedback\Models\FeatureRequest;
 use Ruvelo\Feedback\Support\Palette;
@@ -19,10 +21,16 @@ use Ruvelo\Feedback\Support\Text;
  *
  * toArray() returns `title`, `body` and `url`, the shape
  * ruvelo/laravel-inbox shows without any setup.
+ *
+ * Queued: shipping a popular request can mean mail to hundreds of voters,
+ * which must not happen inside the request that changed the status. It is
+ * dispatched after the transaction commits, so nobody hears about a change
+ * that was rolled back. Apps on the `sync` queue still send it right away.
  */
-class RequestStatusChanged extends Notification
+class RequestStatusChanged extends Notification implements ShouldQueue
 {
     use Queueable;
+    use SerializesModels;
 
     private static ?bool $hasNotificationsTable = null;
 
@@ -31,7 +39,9 @@ class RequestStatusChanged extends Notification
         public readonly ?string $from,
         public readonly string $to,
         public readonly ?string $note = null,
-    ) {}
+    ) {
+        $this->afterCommit();
+    }
 
     /**
      * The configured channels. `database` is left out while the app has no
