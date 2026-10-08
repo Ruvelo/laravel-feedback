@@ -106,8 +106,8 @@
     .fb-chip--team { background: var(--feedback-accent); color: var(--feedback-on-accent) !important; font-size: .68rem; padding: 0 .45rem; }
     .fb-avatar { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; background: var(--feedback-accent-soft); color: var(--feedback-accent-ink); font: 600 .7rem/1 var(--feedback-sans); flex: none; }
     .fb-avatar--small { width: 1.6rem; height: 1.6rem; font-size: .6rem; }
-    .fb-avatars { display: flex; padding-right: .3rem; }
-    .fb-avatars .fb-avatar { margin-right: -.3rem; letter-spacing: -.02em; box-shadow: 0 0 0 2px var(--feedback-bg); }
+    .fb-avatars { display: flex; flex-wrap: wrap; gap: .25rem; }
+    .fb-avatars .fb-avatar { letter-spacing: -.02em; }
 
     .fb .fb-btn, .fb button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; font: 500 .875rem/1 var(--feedback-sans); padding: .62rem .95rem; border-radius: var(--feedback-radius); border: 1px solid var(--feedback-accent); background: var(--feedback-accent); color: var(--feedback-on-accent); cursor: pointer; box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--feedback-accent) 70%, transparent); text-decoration: none; }
     .fb .fb-btn:hover, .fb button:hover { background: var(--feedback-accent-ink); border-color: var(--feedback-accent-ink); text-decoration: none; }
